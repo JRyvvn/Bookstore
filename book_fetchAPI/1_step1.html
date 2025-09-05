@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도서 API</title>
+</head>
+
+<body>
+
+    <script>
+
+        async function bookData() {    // 데이터를 불러오는 비동기 함수 정의
+            const REST_API_KEY = "d0351120cf16534b277234576486007e";    // 본인 REST API 키
+            const params = new URLSearchParams({
+                target: 'title',
+                query: "자바스크립트",
+                size: 50
+            });
+            const url=`https://dapi.kakao.com/v3/search/book?${params.toString()}`;
+
+    try {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: { 
+                Authorization: `KakaoAK ${REST_API_KEY}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // 데이터 존재 여부 확인
+        if (data.documents && data.documents.length > 0) {
+            console.log(data.documents[0].thumbnail);
+        } else {
+            console.log("검색 결과가 없습니다.");
+        }
+        
+    } catch (error) {
+        console.log("에러 발생:", error.message);
+    }
+}
+
+bookData();
+
+    </script>
+</body>
+
+</html>

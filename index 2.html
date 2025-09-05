@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리반 학생 목록</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #myInput {
+            width: 100%;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #myInput:focus {
+            border-color: #4CAF50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e8f5e8;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #d32f2f;
+            background-color: #ffebee;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .student-count {
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>우리반 학생 목록</h1>
+        <input type="text" id="myInput" placeholder="이름, 나이, 주소로 검색하세요..." onkeyup="searchTable()">
+        <div class="student-count" id="studentCount"></div>
+        <div class="wrap" id="wrap">
+            <div class="loading">데이터를 불러오는 중...</div>
+        </div>
+    </div>
+
+    <script>
+        let originalData = [];
+
+        // 샘플 데이터 (실제로는 class.json에서 불러올 데이터)
+        const sampleData = ['./class.json'];
+
+        async function loadData() {
+            try {
+                // 실제 환경에서는 아래 주석을 해제하고 사용
+                const response = await fetch('./class.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                originalData = await response.json();
+                // 실제 환경에서는 아래 주석을 해제하고 사용
+                // await new Promise(resolve => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
+                // originalData = sampleData;
+
+                renderTable(originalData);
+                updateStudentCount(originalData.length, originalData.length);
+
+            } catch (error) {
+                console.error('데이터 로딩 오류:', error);
+                showError('데이터를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.');
+            }
+        }
+
+        function renderTable(data) {
+            const wrap = document.getElementById('wrap');
+            wrap.innerHTML = '';
+
+            if (data.length > 0) {
+                const table = document.createElement('table');
+                
+                // 테이블 헤더 생성
+                const headerRow = document.createElement('tr');
+                ['번호', '이름', '나이', '주소'].forEach(function(headerText) {
+                    const th = document.createElement('th');
+                    th.textContent = headerText;
+                    headerRow.appendChild(th);
+                });
+                table.appendChild(headerRow);
+
+                // 데이터 행 생성
+                data.forEach(function(item) {
+                    const row = document.createElement('tr');
+                    
+                    ['id', 'name', 'age', 'address'].forEach(function(key) {
+                        const td = document.createElement('td');
+                        td.textContent = item[key];
+                        row.appendChild(td);
+                    });
+                    table.appendChild(row);
+                });
+                
+                wrap.appendChild(table);
+            } else {
+                const noResults = document.createElement('div');
+                noResults.className = 'no-results';
+                noResults.textContent = '검색 결과가 없습니다.';
+                wrap.appendChild(noResults);
+            }
+        }
+
+        function searchTable() {
+            const input = document.getElementById('myInput');
+            const filter = input.value.toLowerCase().trim();
+            
+            if (filter === '') {
+                renderTable(originalData);
+                updateStudentCount(originalData.length, originalData.length);
+                return;
+            }
+
+            const filteredData = originalData.filter(function(item) {
+                return Object.values(item).some(function(value) {
+                    return String(value).toLowerCase().includes(filter);
+                });
+            });
+            
+            renderTable(filteredData);
+            updateStudentCount(filteredData.length, originalData.length);
+        }
+
+        function updateStudentCount(filtered, total) {
+            const countElement = document.getElementById('studentCount');
+            if (filtered === total) {
+                countElement.textContent = `총 ${total}명의 학생`;
+            } else {
+                countElement.textContent = `${filtered}명 검색됨 (전체 ${total}명)`;
+            }
+        }
+
+        function showError(message) {
+            const wrap = document.getElementById('wrap');
+            wrap.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // 페이지 로드 시 데이터 불러오기
+        loadData();
+
+        // 검색창 포커스 및 엔터키 이벤트
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('myInput');
+            searchInput.focus();
+            
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    searchTable();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

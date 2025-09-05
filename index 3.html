@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리반 학생 목록</title>
+</head>
+<body>
+    <input type="text" id="myInput" placeholder="search..." onkeyup="searchTable()">
+    <div class="wrap">  </div>
+    
+
+
+    <script>
+        let originalData=[];
+
+        async function loadData(){
+            try {
+                const response=await fetch('./유치원현황.json');
+                if(!response.ok){
+                    throw new Error('네트워크 응답에 문제가 있습니다.');
+                }
+                originalData=await response.json();
+                renderTable(originalData);
+
+            }catch(error){
+                console.error('오류발생:',error);
+            }
+        }
+        loadData();
+
+        function renderTable(data){
+            const wrap=document.querySelector('.wrap');
+            wrap.innerHTML='';
+
+            if(data.length > 0 ) {
+                const table=document.createElement('table');
+                
+                data.forEach(function(item) {
+                    const row=document.createElement('tr');
+                    
+                    ['EDU_SPORT_ADMT_NM','KDGT_NM','TELNO','REFINE_ROADNM_ADDR','REFINE_ZIPNO'].forEach(function (key) {
+                        const td = document.createElement('td');
+                        td.textContent=item[key];
+                        row.appendChild(td);
+                    });
+                    table.appendChild(row);
+                });
+                wrap.appendChild(table);
+            }
+        }       
+        function searchTable(){
+            const searchtext=document.getElementById('myInput').value.toLowerCase();
+            ;
+
+            const rows = document.querySelectorAll('.wrap table tr');
+
+            rows.forEach(function(row){
+                row.style.display=row.textContent.toLowerCase().includes(searchtext) ? '' : 'none';
+            });
+            // const lowerSearchText=searchtext.toLowerCase();
+            // console.log('검색어:',lowerSearchText);
+            // const input=document.getElementById('myInput');
+            // const filter=input.value.toLowerCase();
+            
+            // const filteredData=originalData.filter(function(item){
+            //     return Object.values(item).some(function(value){
+            //         return String(value).toLowerCase().includes(filter);
+            //     });
+            // });
+            // renderTable(filteredData);
+        }
+    </script>
+
+
+
+
+
+</body>
+</html>
